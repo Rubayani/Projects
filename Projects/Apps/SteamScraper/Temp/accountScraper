@@ -1,0 +1,35 @@
+import requests
+
+API_KEY = "YOUR_API_KEY_HERE"
+
+def getSteamId(username):
+    url = f"http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key={API_KEY}&vanityurl={username}"
+    resp = requests.get(url).json()
+    if resp["response"]["success"] == 1:
+        return resp["response"]["steamid"]
+    return None
+
+def getProfileAndGames(steamid):
+    summaryUrl = f"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={API_KEY}&steamids={steamid}"
+    summaryData = requests.get(summaryUrl).json()
+    player = summaryData["response"]["players"][0]
+
+    print("Name:", player.get("personaname"))
+    print("Country:", player.get("loccountrycode"))
+    print("Profile URL:", player.get("profileurl"))
+
+    gamesUrl = f"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={API_KEY}&steamid={steamid}&include_appinfo=1&format=json"
+    gamesData = requests.get(gamesUrl).json()
+
+    print("Games Owned:")
+    for g in gamesData["response"].get("games", []):
+        print(f"{g['name']} | Playtime: {g['playtime_forever']//60} hrs")
+
+username = "gaben"
+steamid = getSteamId(username)
+
+if steamid:
+    print("SteamID64:", steamid)
+    getProfileAndGames(steamid)
+else:
+    print("Username not found")
